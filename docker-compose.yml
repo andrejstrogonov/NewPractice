@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # 1. Keycloak с PostgreSQL
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=ChangeMeNow!
+      - KC_HOSTNAME=keycloak.your-domain.com
+      - KC_HTTP_ENABLED=true
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak-db:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloakdbpass
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+    ports:
+      - "8080:8080"  # Для доступа к админ‑панели Keycloak
+    depends_on:
+      - keycloak-db
+    networks:
+      - vpn-network
+
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloakdbpass
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    networks:
+      - vpn-network
+
+  # 2. Nginx + Stunnel + Certbot (прокси с аутентификацией)
+  vpn-proxy:
+    build:
+      context: ./vpn-proxy
+      dockerfile: Dockerfile
+    container_name: vpn-proxy
+    volumes:
+      - certs-data:/etc/letsencrypt
+      - ./vpn-proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./vpn-proxy/stunnel.conf:/etc/stunnel/stunnel.conf
+      - ./vpn-proxy/certbot-renew.sh:/usr/local/bin/certbot-renew.sh
+      - ./vpn-proxy/keycloak-public.pem:/etc/nginx/keycloak/public-key.pem
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1194:1194"  # Порт для OpenVPN через Stunnel
+    depends_on:
+      - keycloak
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+  # 3. OpenVPN (опционально — если нужен сервер внутри)
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn-server
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - openvpn-data:/etc/openvpn
+    ports:
+      - "1194:1194/udp"
+    command: ["ovpn_run"]
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+networks:
+  vpn-network:
+    driver: bridge
+
+volumes:
+  keycloak-db-data:
+  certs-data:
+  openvpn-data:
