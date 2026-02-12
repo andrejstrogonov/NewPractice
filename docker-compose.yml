@@ -47,6 +47,7 @@ services:
       - ./vpn-proxy/stunnel.conf:/etc/stunnel/stunnel.conf
       - ./vpn-proxy/certbot-renew.sh:/usr/local/bin/certbot-renew.sh
       - ./vpn-proxy/keycloak-public.pem:/etc/nginx/keycloak/public-key.pem
+      - ./vpn-proxy/cloudflare.conf:/etc/nginx/cloudflare.conf
     ports:
       - "80:80"
       - "443:443"
