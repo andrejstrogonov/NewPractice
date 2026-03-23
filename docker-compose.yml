@@ -72,6 +72,65 @@ services:
     networks:
       - vpn-network
     restart: unless-stopped
+  # 4. P2P-узлы (напр. как узлы BitTorrent)
+  p2p-node-1:
+    image: kylemanna/openvpn
+    container_name: p2p-node-1
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./p2p-configs/p2p-node-1:/etc/openvpn
+    command: ["ovpn_run"]
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+  p2p-node-2:
+    image: kylemanna/openvpn
+    container_name: p2p-node-2
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./p2p-configs/p2p-node-2:/etc/openvpn
+    command: ["ovpn_run"]
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+  p2p-node-3:
+    image: kylemanna/openvpn
+    container_name: p2p-node-3
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./p2p-configs/p2p-node-3:/etc/openvpn
+    command: ["ovpn_run"]
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+  internal-nginx:
+    image: nginx:alpine
+    container_name: internal-nginx
+    volumes:
+      - ./internal-nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8081:80"
+    networks:
+      - vpn-network
+    restart: unless-stopped
+
+  
+  integrity-api:
+    image: node:alpine
+    container_name: integrity-api
+    working_dir: /app
+    volumes:
+      - ./integrity-api:/app
+    command: sh -c "npm install && node server.js"
+    networks:
+      - vpn-network
+    restart: unless-stopped
 
 networks:
   vpn-network:
