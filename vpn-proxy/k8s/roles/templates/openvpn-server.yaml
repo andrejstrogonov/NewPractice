@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvpn-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvpn-server
+  template:
+    metadata:
+      labels:
+        app: openvpn-server
+    spec:
+      containers:
+        - name: openvpn
+          image: kylemanna/openvpn
+          ports:
+            - containerPort: 1194
+              protocol: UDP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - name: openvpn-data
+              mountPath: /etc/openvpn
+      volumes:
+        - name: openvpn-data
+          persistentVolumeClaim:
+            claimName: openvpn-pvc

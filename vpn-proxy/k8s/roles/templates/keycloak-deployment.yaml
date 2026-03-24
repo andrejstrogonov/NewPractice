@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: vpn-namespace
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:24.0
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "ChangeMeNow!"
+        - name: KC_HOSTNAME
+          value: "keycloak.your-domain.com"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://keycloak-db:5432/keycloak"
+        - name: KC_DB_USERNAME
+          value: "keycloak"
+        - name: KC_DB_PASSWORD
+          value: "keycloakdbpass"
+        - name: KC_HEALTH_ENABLED
+          value: "true"
+        - name: KC_METRICS_ENABLED
+          value: "true"
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: vpn-namespace
+  labels:
+    app: keycloak
+spec:
+  selector:
+    app: keycloak
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP

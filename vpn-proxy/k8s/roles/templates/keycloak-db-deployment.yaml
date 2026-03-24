@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-db
+  namespace: vpn-namespace
+  labels:
+    app: keycloak-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak-db
+  template:
+    metadata:
+      labels:
+        app: keycloak-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: "keycloak"
+        - name: POSTGRES_USER
+          value: "keycloak"
+        - name: POSTGRES_PASSWORD
+          value: "keycloakdbpass"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: keycloak-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-db
+  namespace: vpn-namespace
+  labels:
+    app: keycloak-db
+spec:
+  selector:
+    app: keycloak-db
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  type: ClusterIP

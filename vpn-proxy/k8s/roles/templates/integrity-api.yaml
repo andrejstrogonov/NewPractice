@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: integrity-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: integrity-api
+  template:
+    metadata:
+      labels:
+        app: integrity-api
+    spec:
+      containers:
+        - name: api
+          image: node:alpine
+          workingDir: /app
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cd /app && npm install && node server.js
+          volumeMounts:
+            - name: app-volume
+              mountPath: /app
+      volumes:
+        - name: app-volume
+          configMap:
+            name: integrity-api-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: integrity-api-svc
+spec:
+  selector:
+    app: integrity-api
+  ports:
+    - port: 8080
+      targetPort: 8080

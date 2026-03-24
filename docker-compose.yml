@@ -132,6 +132,32 @@ services:
       - vpn-network
     restart: unless-stopped
 
+  clickhouse:
+    image: yandex/clickhouse-server:23.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP-порт
+      - "9000:9000"  # TCP-порт
+    volumes:
+      - ./clickhouse/data:/var/lib/clickhouse
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.xml
+    networks:
+      - app-network
+
+  neo4j:
+    image: neo4j:5.20
+    container_name: neo4j
+    ports:
+      - "7474:7474"  # Browser
+      - "7687:7687"  # Bolt
+    environment:
+      NEO4J_AUTH: neo4j/password  # Установите свой пароль
+    volumes:
+      - ./neo4j/data:/data
+      - ./neo4j/logs:/logs
+    networks:
+      - app-network
+
 networks:
   vpn-network:
     driver: bridge

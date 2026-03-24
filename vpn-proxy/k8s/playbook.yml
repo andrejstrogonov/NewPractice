@@ -1,0 +1,8 @@
+---
+- name: Deploy Keycloak + OpenVPN + P2P + Nginx + API to Kubernetes
+  hosts: k8s
+  become: no
+  vars:
+    namespace: vpn-namespace
+  roles:
+    - k8s-deploy

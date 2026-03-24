@@ -1,0 +1,84 @@
+---
+- name: Create namespace
+  kubernetes.core.k8s:
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+# PostgreSQL (Bitnami)
+- name: Deploy PostgreSQL
+  kubernetes.core.helm:
+    name: postgresql
+    chart_ref: bitnami/postgresql
+    namespace: "{{ namespace }}"
+    values:
+      auth:
+        postgresPassword: "keycloakdbpass"
+        username: "keycloak"
+        database: "keycloak"
+      primary:
+        persistence:
+          enabled: true
+          storageClass: ""
+          size: 8Gi
+
+# Keycloak (Bitnami)
+- name: Deploy Keycloak
+  kubernetes.core.helm:
+    name: keycloak
+    chart_ref: bitnami/keycloak
+    namespace: "{{ namespace }}"
+    values:
+      auth:
+        adminUser: "admin"
+        adminPassword: "ChangeMeNow!"
+      service:
+        type: ClusterIP
+      postgresql:
+        enabled: false
+        host: postgresql
+        port: 5432
+        username: keycloak
+        password: keycloakdbpass
+        database: keycloak
+
+# Nginx + Stunnel + Certbot + Cloudflare
+- name: Deploy Nginx Proxy
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/nginx-proxy.yaml"
+
+# OpenVPN server
+- name: Deploy OpenVPN server
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/openvpn-server.yaml"
+
+# P2P Nodes
+- name: Deploy P2P node 1
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/p2p-node-1.yaml"
+
+- name: Deploy P2P node 2
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/p2p-node-2.yaml"
+
+- name: Deploy P2P node 3
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/p2p-node-3.yaml"
+
+# Internal Nginx
+- name: Deploy internal Nginx
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/internal-nginx.yaml"
+
+# Integrity API
+- name: Deploy Integrity API
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ playbook_dir }}/roles/k8s-deploy/templates/integrity-api.yaml"
