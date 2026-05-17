@@ -1,0 +1,11 @@
+{
+  "name": "integrity-grpc",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "license": "MIT",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "@grpc/proto-loader": "^0.8.0"
+  }
+}

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package integrity;
+
+service IntegrityService {
+  rpc CheckIntegrity (IntegrityRequest) returns (IntegrityReply);
+}
+
+message IntegrityRequest {
+  string data = 1;
+  string expected_hash = 2;
+  string packet_id = 3;
+}
+
+message IntegrityReply {
+  string status = 1;
+  string message = 2;
+  string packet_id = 3;
+  string calculated_hash = 4;
+  bool is_valid = 5;
+  double confidence = 6;
+  string timestamp = 7;
+}

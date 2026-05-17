@@ -1,0 +1,6 @@
+domain_name             = "vpn.example.com"
+keycloak_hostname       = "keycloak.example.com"
+keycloak_admin_password = "ChangeMeNow!"
+postgres_password       = "ChangeMeNow!"
+integrity_api_key       = "replace-with-long-random-token"
+tls_secret_name         = "vpn-proxy-tls"
